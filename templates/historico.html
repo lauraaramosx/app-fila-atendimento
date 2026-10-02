@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Histórico{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+    <div>
+        <h1>Histórico de atendimentos</h1>
+        <p>Registro de todas as movimentações da fila.</p>
+    </div>
+</section>
+
+<section class="card">
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Data/hora</th>
+                    <th>Cliente</th>
+                    <th>Prioridade</th>
+                    <th>Status</th>
+                    <th>Ação</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {% for registro in registros %}
+
+                    <tr>
+                        <td>
+                            {{ registro["realizado_em"] }}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ registro["nome"] }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            <span
+                                class="badge badge-{{ registro['prioridade']|lower }}"
+                            >
+                                {{ registro["prioridade"] }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <span class="status status-{{ registro['status']|lower|replace(' ', '-') }}">
+                                {{ registro["status"] }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ registro["acao"] }}
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="5" class="empty">
+                            Nenhum registro encontrado.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+{% endblock %}

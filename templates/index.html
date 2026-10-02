@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Fila de Atendimento{% endblock %}
+
+{% block content %}
+
+<section class="page-header">
+    <div>
+        <h1>Fila de atendimento</h1>
+        <p>Gerencie a chegada e o atendimento dos clientes.</p>
+    </div>
+</section>
+
+<section class="dashboard">
+
+    <div class="card">
+        <h2>Cadastrar cliente</h2>
+
+        <form
+            action="{{ url_for('cadastrar') }}"
+            method="POST"
+            class="form"
+        >
+            <div class="form-group">
+                <label for="nome">Nome</label>
+
+                <input
+                    id="nome"
+                    name="nome"
+                    type="text"
+                    placeholder="Nome do cliente"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="telefone">Telefone</label>
+
+                <input
+                    id="telefone"
+                    name="telefone"
+                    type="text"
+                    placeholder="(00) 00000-0000"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="prioridade">Prioridade</label>
+
+                <select id="prioridade" name="prioridade">
+                    <option value="Normal">Normal</option>
+                    <option value="Preferencial">Preferencial</option>
+                </select>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+                Adicionar à fila
+            </button>
+        </form>
+    </div>
+
+
+    <div class="card current-card">
+        <h2>Em atendimento</h2>
+
+        {% if atual %}
+
+            <div class="current-client">
+                <span class="current-label">Cliente atual</span>
+
+                <strong>
+                    {{ atual["nome"] }}
+                </strong>
+
+                {% if atual["telefone"] %}
+                    <span>{{ atual["telefone"] }}</span>
+                {% endif %}
+
+                <span class="badge badge-{{ atual['prioridade']|lower }}">
+                    {{ atual["prioridade"] }}
+                </span>
+            </div>
+
+            <div class="actions">
+                <form
+                    action="{{ url_for('concluir', atendimento_id=atual['id']) }}"
+                    method="POST"
+                >
+                    <button class="btn btn-success" type="submit">
+                        Concluir atendimento
+                    </button>
+                </form>
+
+                <form
+                    action="{{ url_for('cancelar', atendimento_id=atual['id']) }}"
+                    method="POST"
+                    onsubmit="return confirm('Cancelar este atendimento?');"
+                >
+                    <button class="btn btn-danger" type="submit">
+                        Cancelar
+                    </button>
+                </form>
+            </div>
+
+        {% else %}
+
+            <div class="empty">
+                Nenhum cliente em atendimento.
+            </div>
+
+            <form
+                action="{{ url_for('chamar_proximo') }}"
+                method="POST"
+            >
+                <button class="btn btn-primary btn-large" type="submit">
+                    Chamar próximo
+                </button>
+            </form>
+
+        {% endif %}
+    </div>
+
+</section>
+
+
+<section class="card queue-card">
+
+    <div class="section-header">
+        <div>
+            <h2>Fila de espera</h2>
+            <p>
+                Clientes preferenciais aparecem antes dos clientes
+                normais.
+            </p>
+        </div>
+
+        {% if not atual %}
+            <form
+                action="{{ url_for('chamar_proximo') }}"
+                method="POST"
+            >
+                <button class="btn btn-primary" type="submit">
+                    Chamar próximo
+                </button>
+            </form>
+        {% endif %}
+    </div>
+
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Posição</th>
+                    <th>Cliente</th>
+                    <th>Telefone</th>
+                    <th>Prioridade</th>
+                    <th>Entrada</th>
+                    <th>Status</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+
+            <tbody id="queue-body">
+
+                {% for cliente in fila %}
+
+                    <tr>
+                        <td>
+                            {% if cliente["status"] == "Aguardando" %}
+                                {{ loop.index }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <strong>
+                                {{ cliente["nome"] }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ cliente["telefone"] or "—" }}
+                        </td>
+
+                        <td>
+                            <span
+                                class="badge badge-{{ cliente['prioridade']|lower }}"
+                            >
+                                {{ cliente["prioridade"] }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {{ cliente["criado_em"] }}
+                        </td>
+
+                        <td>
+                            <span class="status status-{{ cliente['status']|lower|replace(' ', '-') }}">
+                                {{ cliente["status"] }}
+                            </span>
+                        </td>
+
+                        <td>
+                            {% if cliente["status"] == "Aguardando" %}
+                                <form
+                                    action="{{ url_for('cancelar', atendimento_id=cliente['id']) }}"
+                                    method="POST"
+                                    onsubmit="return confirm('Cancelar este cliente?');"
+                                >
+                                    <button
+                                        class="btn btn-small btn-danger"
+                                        type="submit"
+                                    >
+                                        Cancelar
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                {% else %}
+
+                    <tr>
+                        <td colspan="7" class="empty">
+                            A fila está vazia.
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+        </table>
+    </div>
+
+</section>
+
+{% endblock %}
